@@ -7,58 +7,108 @@
 
 using namespace std;
 
-class Point2D
+class Point
 {
 public:
-	Point2D(int x, int y);
+	Point(int x, int y);
 
 	int x;
 	int y;
 };
 
-Point2D::Point2D(int x = 0, int y = 0)
+Point::Point(int x = 0, int y = 0)
 {
 	this->x = x;
 	this->y = y;
 }
 
-vector<Point2D*> DrawCircle(int radius, bool fill)
+class Matrix
 {
-	vector<Point2D*> sprite;
+public:
+	Matrix(int width, int height);
+
+	int width;
+	int height;
+
+	void SetPoint(Point* point, bool value);
+	bool GetPoint(Point* point);
+private:
+	bool** arr;
+};
+
+Matrix::Matrix(int width, int height)
+{
+	arr = new bool*[height];
+
+	for(int i = 0; i < height; i++)
+	{
+		arr[i] = new bool[width];
+	}
+}
+
+void Matrix::SetPoint(Point* point, bool value)
+{
+	arr[point->x][point->y] = value;
+}
+
+bool Matrix::GetPoint(Point* point)
+{
+	return arr[point->x][point->y];
+}
+
+Matrix* DrawCircle(int radius, bool fill)
+{
+	Matrix* sprite = new Matrix(((2 * radius) + 2), ((2 * radius) + 2));
 
 	float a = 0;
-	float ad = M_PI / radius / 3;
+	float ad = M_PI / 180;
 
 	while(true)
 	{
-		Point2D* od = new Point2D();
+		Point* od = new Point();
 
 		od->x = sin(a) * radius;
 		od->y = cos(a) * radius;
 
+		int x1 = (radius - od->x);
+		int x2 = (radius + od->x);
+
+		int y1 = (radius - od->y);
+		int y2 = (radius + od->y);
+
+		delete od;
+
 		if(fill)
 		{
-			for(int xd = -od->x; xd <= od->x; xd++)
+			for(int x = x1; x <= x2; x++)
 			{
-				sprite.push_back(new Point2D(xd, od->y));
+				Point* p1 = new Point(x, y1);
+				Point* p2 = new Point(x, y2);
 
-				if(od->y != 0)
-				{
-					sprite.push_back(new Point2D(xd, -od->y));
-				}
+				sprite->SetPoint(p1, true);
+				sprite->SetPoint(p2, true);
+
+				delete p1;
+				delete p2;
 			}
 		}
 		else
 		{
-			sprite.insert(sprite.end(), {
-				new Point2D(od->x, od->y),
-				new Point2D(od->x, -od->y),
-				new Point2D(-od->x, od->y),
-				new Point2D(-od->x, -od->y)
-			});
-		}
+			Point* p1 = new Point(x1, y1);
+			Point* p2 = new Point(x1, y2);
+			Point* p3 = new Point(x2, y1);
+			Point* p4 = new Point(x2, y2);
 
-		delete od;
+			sprite->SetPoint(p1, true);
+			sprite->SetPoint(p2, true);
+			sprite->SetPoint(p3, true);
+			sprite->SetPoint(p4, true);
+
+			delete p1;
+			delete p2;
+			delete p3;
+			delete p4;
+		}
 
 		if(a > (M_PI / 2))
 		{
@@ -74,32 +124,31 @@ vector<Point2D*> DrawCircle(int radius, bool fill)
 class Object
 {
 public:
-	Object(float mass, Point2D* position);
+	Object(float mass, Point* position);
 
 	float mass;
-	Point2D* position;
-	Point2D* velocity;
-	vector<Point2D*> forces;
-	vector<Point2D*> sprite;
+	Point* position;
+	Point* velocity;
+	Matrix* sprite;
+	vector<Point*> forces;
 };
 
-Object::Object(float mass, Point2D* position)
+Object::Object(float mass, Point* position)
 {
 	this->mass = mass;
 	this->position = position;
-	this->velocity = new Point2D(0, 0);
+	this->velocity = new Point(0, 0);
 }
 
 class Ball : public Object
 {
 public:
-	Ball(float mass, Point2D* position, int radius);
+	Ball(float mass, Point* position, int radius);
 };
 
-Ball::Ball(float mass, Point2D* position, int radius) : Object(mass, position)
+Ball::Ball(float mass, Point* position, int radius) : Object(mass, position)
 {
 	sprite = DrawCircle(radius, true);
-	cout << sprite.size() << endl;
 }
 
 class Simulator
@@ -117,7 +166,7 @@ Simulator::Simulator(SDL_Renderer* renderer)
 {
 	this->renderer = renderer;
 
-	objects[0] = new Ball(1, new Point2D(100, 100), 5);
+	objects[0] = new Ball(1, new Point(100, 100), 5);
 }
 
 void Simulator::Tick()
@@ -126,18 +175,28 @@ void Simulator::Tick()
 	{
 		Object* object = objects[i];
 
-		for(unsigned j = 0; j < object->sprite.size(); j++)
+		for(int j = 0; j < object->sprite->width; j++)
 		{
-			Point2D* particle = object->sprite[j];
+			for(int k = 0; k < object->sprite->height; k++)
+			{
+				Point* particle = new Point(j, k);
 
-			Point2D* pixel = new Point2D();
+				bool isThereAParticle = object->sprite->GetPoint(particle);
 
-			pixel->x = object->position->x + particle->x;
-			pixel->y = object->position->y + particle->y;
+				if(isThereAParticle)
+				{
+					Point* pixel = new Point();
 
-			SDL_RenderDrawPoint(renderer, pixel->x, pixel->y);
+					pixel->x = object->position->x - (object->sprite->width / 2) + particle->x;
+					pixel->y = object->position->y - (object->sprite->height / 2) + particle->y;
 
-			delete pixel;
+					SDL_RenderDrawPoint(renderer, pixel->x, pixel->y);
+
+					delete pixel;
+				}
+
+				delete particle;
+			}
 		}
 	}
 }
