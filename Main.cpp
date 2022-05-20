@@ -38,6 +38,9 @@ private:
 
 Matrix::Matrix(int width, int height)
 {
+	this->width = width;
+	this->height = height;
+
 	arr = new bool*[height];
 
 	for(int i = 0; i < height; i++)
@@ -58,7 +61,7 @@ bool Matrix::GetPoint(Point* point)
 
 Matrix* DrawCircle(int radius, bool fill)
 {
-	Matrix* sprite = new Matrix(((2 * radius) + 2), ((2 * radius) + 2));
+	Matrix* sprite = new Matrix(((2 * radius) + 10), ((2 * radius) + 10));
 
 	float a = 0;
 	float ad = M_PI / 180;
