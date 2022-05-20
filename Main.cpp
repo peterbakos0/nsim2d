@@ -209,7 +209,7 @@ int main()
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	SDL_Window* window = SDL_CreateWindow(
-		"Physics Simulation 1",
+		"nsim2d",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
 		512,
