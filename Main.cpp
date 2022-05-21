@@ -1,4 +1,5 @@
 #include <math.h>
+#include <cmath>
 #include <array>
 #include <vector>
 #include <algorithm>
@@ -41,11 +42,13 @@ Matrix::Matrix(int width, int height)
 	this->width = width;
 	this->height = height;
 
-	arr = new bool*[height];
+	//bool (*arr)[width][height];
 
-	for(int i = 0; i < height; i++)
+	arr = new bool*[width];
+
+	for(int i = 0; i < width; i++)
 	{
-		arr[i] = new bool[width];
+		arr[i] = new bool[height]();
 	}
 }
 
@@ -61,7 +64,7 @@ bool Matrix::GetPoint(Point* point)
 
 Matrix* DrawCircle(int radius, bool fill)
 {
-	Matrix* sprite = new Matrix(((2 * radius) + 10), ((2 * radius) + 10));
+	Matrix* sprite = new Matrix(((2 * radius) + 1), ((2 * radius) + 1));
 
 	float a = 0;
 	float ad = M_PI / 180;
@@ -70,8 +73,8 @@ Matrix* DrawCircle(int radius, bool fill)
 	{
 		Point* od = new Point();
 
-		od->x = sin(a) * radius;
-		od->y = cos(a) * radius;
+		od->x = floor(sin(a) * radius);
+		od->y = floor(cos(a) * radius);
 
 		int x1 = (radius - od->x);
 		int x2 = (radius + od->x);
@@ -157,26 +160,31 @@ Ball::Ball(float mass, Point* position, int radius) : Object(mass, position)
 class Simulator
 {
 public:
-	Simulator(SDL_Renderer* renderer);
+	Simulator();
+
+	array<Object*, 1> objects;
 
 	void Tick();
-private:
-	SDL_Renderer* renderer;
-	array<Object*, 1> objects;
 };
 
-Simulator::Simulator(SDL_Renderer* renderer)
+Simulator::Simulator()
 {
-	this->renderer = renderer;
-
 	objects[0] = new Ball(1, new Point(100, 100), 5);
 }
 
 void Simulator::Tick()
 {
-	for(unsigned i = 0; i < objects.size(); i++)
+
+}
+
+void Render(Simulator* simulator, SDL_Renderer* renderer)
+{
+	SDL_RenderClear(renderer);
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+	for(unsigned i = 0; i < simulator->objects.size(); i++)
 	{
-		Object* object = objects[i];
+		Object* object = simulator->objects[i];
 
 		for(int j = 0; j < object->sprite->width; j++)
 		{
@@ -202,6 +210,9 @@ void Simulator::Tick()
 			}
 		}
 	}
+
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderPresent(renderer);
 }
 
 int main()
@@ -219,7 +230,12 @@ int main()
 
 	SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, 0);
 
-	Simulator* simulator = new Simulator(renderer);
+	Simulator* simulator = new Simulator();
+
+	int ups = 60;
+	int upf = 2;
+
+	int uc = 0;
 
 	bool quit = false;
 
@@ -240,14 +256,16 @@ int main()
 			}
 		}
 
-		SDL_RenderClear(renderer);
+		if(uc % upf == 0)
+		{
+			Render(simulator, renderer);
+		}
 
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		simulator->Tick();
 
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_Delay(1000 / ups);
 
-		SDL_RenderPresent(renderer);
+		uc++;
 	}
 
 	return 0;
