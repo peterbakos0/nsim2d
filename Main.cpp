@@ -1,8 +1,6 @@
 #include <math.h>
-#include <cmath>
 #include <array>
 #include <vector>
-#include <algorithm>
 #include <iostream>
 #include <SDL2/SDL.h>
 
@@ -41,8 +39,6 @@ Matrix::Matrix(int width, int height)
 {
 	this->width = width;
 	this->height = height;
-
-	//bool (*arr)[width][height];
 
 	arr = new bool*[width];
 
