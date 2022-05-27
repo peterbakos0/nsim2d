@@ -1,4 +1,4 @@
-#include <math.h>
+#include <cmath>
 #include <array>
 #include <vector>
 #include <iostream>
@@ -60,25 +60,33 @@ bool Matrix::GetPoint(Point* point)
 
 Matrix* DrawCircle(int radius, bool fill)
 {
-	Matrix* sprite = new Matrix(((2 * radius) + 1), ((2 * radius) + 1));
+	Matrix* sprite = new Matrix(((2 * radius) + 3), (2 * radius));
 
-	float a = 0;
-	float ad = M_PI / 180;
+	Point* currentPoint = new Point(0, radius);
 
-	while(true)
+	while(currentPoint->y > 0)
 	{
-		Point* od = new Point();
+		int dist = pow((pow(currentPoint->x, 2) + pow(currentPoint->y, 2)), 0.5);
 
-		od->x = floor(sin(a) * radius);
-		od->y = floor(cos(a) * radius);
+		if(dist == radius)
+		{
+			currentPoint->x++;
+			currentPoint->y--;
+		}
+		else if(dist < radius)
+		{
+			currentPoint->x++;
+		}
+		else
+		{
+			currentPoint->y--;
+		}
 
-		int x1 = (radius - od->x);
-		int x2 = (radius + od->x);
+		int x1 = (radius - currentPoint->x + 1);
+		int x2 = (radius + currentPoint->x + 1);
 
-		int y1 = (radius - od->y);
-		int y2 = (radius + od->y);
-
-		delete od;
+		int y1 = (radius - currentPoint->y);
+		int y2 = (radius + currentPoint->y);
 
 		if(fill)
 		{
@@ -111,14 +119,9 @@ Matrix* DrawCircle(int radius, bool fill)
 			delete p3;
 			delete p4;
 		}
-
-		if(a > (M_PI / 2))
-		{
-			break;
-		}
-
-		a += ad;
 	}
+
+	delete currentPoint;
 
 	return sprite;
 }
@@ -165,7 +168,7 @@ public:
 
 Simulator::Simulator()
 {
-	objects[0] = new Ball(1, new Point(100, 100), 5);
+	objects[0] = new Ball(1, new Point(200, 200), 100);
 }
 
 void Simulator::Tick()
